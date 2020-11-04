@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+   <style>
+   </style>
+  </head>
+  <body>
+          <div>
+          <canvas id="canvas" width="300" height="300"></canvas>
+        </div>
+
+<script>
+
+function updateCanvas (display) {
+  const context = canvas.getContext("2d");
+  const imgData = context.createImageData(100, 100);
+  for (let i = 0; i < 100 * 100; i++) {
+    imgData.data[i * 4] = display[i];
+    imgData.data[i * 4 + 1] = display[i];
+    imgData.data[i * 4 + 2] = display[i];
+    imgData.data[i * 4 + 3] = 255;
+  }
+  const data = scaleImageData(imgData, 3, context);
+  context.putImageData(data, 0, 0);
+};
+
+// quick and dirty image data scaling
+// see: https://stackoverflow.com/questions/3448347/how-to-scale-an-imagedata-in-html-canvas
+function scaleImageData(imageData, scale, ctx) {
+  const scaled = ctx.createImageData(
+    imageData.width * scale,
+    imageData.height * scale
+  );
+  const subLine = ctx.createImageData(scale, 1).data;
+  for (let row = 0; row < imageData.height; row++) {
+    for (let col = 0; col < imageData.width; col++) {
+      const sourcePixel = imageData.data.subarray(
+        (row * imageData.width + col) * 4,
+        (row * imageData.width + col) * 4 + 4
+      );
+      for (let x = 0; x < scale; x++) subLine.set(sourcePixel, x * 4);
+      for (let y = 0; y < scale; y++) {
+        const destRow = row * scale + y;
+        const destCol = col * scale;
+        scaled.data.set(subLine, (destRow * scaled.width + destCol) * 4);
+      }
+    }
+  }
+  return scaled;
+}
+
+const memory = new WebAssembly.Memory({ initial: 1 });
+var importObject = {
+	
+  env: {
+    print: function(arg) {
+      console.log(arg);
+    }, 
+    memory: memory
+  }
+};
+fetch('generated-fractal.wasm').then(response =>
+  response.arrayBuffer()
+).then(bytes =>
+  WebAssembly.instantiate(bytes, importObject)
+).then(obj => {
+    obj.instance.exports.run();
+    let display = new Uint8Array(memory.buffer, 0, 10000);
+	updateCanvas(display);
+});
+/*
+fetch('generated-8-2.wasm').then(response =>
+  response.arrayBuffer()
+).then(bytes =>
+  WebAssembly.instantiate(bytes, importObject)
+).then(obj => {
+	//"if ( 5 > 3 ) print 2 else print 3 endif"
+    obj.instance.exports.run();
+});
+*/
+/*
+fetch('generated-8.wasm').then(response =>
+  response.arrayBuffer()
+).then(bytes =>
+  WebAssembly.instantiate(bytes, importObject)
+).then(obj => {
+	//"if ( 5 < 3 ) print 2 else print 3 endif"
+    obj.instance.exports.run();
+});*/
+/*
+fetch('generated-7.wasm').then(response =>
+  response.arrayBuffer()
+).then(bytes =>
+  WebAssembly.instantiate(bytes, importObject)
+).then(obj => {
+	//"setpixel 1 2 3"
+    obj.instance.exports.run();
+    let display = new Uint8Array(memory.buffer, 0, 10000);
+	updateCanvas(display);
+});*/
+/*
+fetch('generated-6-2.wasm').then(response =>
+  response.arrayBuffer()
+).then(bytes =>
+  WebAssembly.instantiate(bytes, importObject)
+).then(obj => {
+	//"var f = 0 while ( f < 5 ) f = ( f + 1 ) print f endwhile"
+    obj.instance.exports.run();
+});*/
+/*
+fetch('generated-6-1.wasm').then(response =>
+  response.arrayBuffer()
+).then(bytes =>
+  WebAssembly.instantiate(bytes, importObject)
+).then(obj => {
+	//"var f = 22 f = ( f + 1 ) print f"
+    obj.instance.exports.run();
+});*/
+/*
+fetch('generated-5.wasm').then(response =>
+  response.arrayBuffer()
+).then(bytes =>
+  WebAssembly.instantiate(bytes, importObject)
+).then(obj => {
+	//"var f = 22 print f"
+    obj.instance.exports.run();
+});*/
+/*
+fetch('generated-4.wasm').then(response =>
+  response.arrayBuffer()
+).then(bytes =>
+  WebAssembly.instantiate(bytes, importObject)
+).then(obj => {
+	//"print ( 2 + 4 )"
+    obj.instance.exports.run();
+});
+*/
+/*
+fetch('generated-3.wasm').then(response =>
+  response.arrayBuffer()
+).then(bytes =>
+  WebAssembly.instantiate(bytes, importObject)
+).then(obj => {
+	//"print 8"
+    obj.instance.exports.run();
+});
+*/
+/*
+fetch('generated-2.wasm').then(response =>
+  response.arrayBuffer()
+).then(bytes =>
+  WebAssembly.instantiate(bytes, importObject)
+).then(obj => {
+    let res = obj.instance.exports.run(5, 6);
+    console.log("result=" + res);
+});
+*/
+/*
+WebAssembly.instantiateStreaming(fetch('generated-2.wasm'), {})
+.then(obj => { 
+    let res = obj.instance.exports.run(5, 6);
+    console.log("result=" + res);
+	});
+*/
+    </script>
+  </body>
+</html>
